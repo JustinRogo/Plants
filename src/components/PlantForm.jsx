@@ -111,102 +111,111 @@ export default function PlantForm({ session, onPlantAdded, setMessage }) {
     onPlantAdded()
   }
 
-return (
-  <form className="plant-form-expanded" onSubmit={addPlant}>
-    <input
-      type="text"
-      placeholder="Nickname"
-      value={nickname}
-      onChange={(e) => setNickname(e.target.value)}
-      required
-    />
-
-    <input
-      type="text"
-      placeholder="Common name"
-      value={commonName}
-      onChange={(e) => setCommonName(e.target.value)}
-    />
-
-    <input
-      type="text"
-      placeholder="Scientific name"
-      value={scientificName}
-      onChange={(e) => setScientificName(e.target.value)}
-    />
-
-    <input
-      type="text"
-      placeholder="Cultivar"
-      value={cultivar}
-      onChange={(e) => setCultivar(e.target.value)}
-    />
-
-    <input
-      type="text"
-      placeholder="Location"
-      value={location}
-      onChange={(e) => setLocation(e.target.value)}
-    />
-
-    <input
-      type="text"
-      placeholder="Light conditions"
-      value={lightConditions}
-      onChange={(e) => setLightConditions(e.target.value)}
-    />
-
-    <input
-      type="text"
-      placeholder="Pot size"
-      value={potSize}
-      onChange={(e) => setPotSize(e.target.value)}
-    />
-
-    <input
-      type="text"
-      placeholder="Substrate"
-      value={substrate}
-      onChange={(e) => setSubstrate(e.target.value)}
-    />
-
-    <input
-      type="date"
-      value={acquiredOn}
-      onChange={(e) => setAcquiredOn(e.target.value)}
-    />
-
-    <select value={status} onChange={(e) => setStatus(e.target.value)}>
-      <option value="active">Active</option>
-      <option value="gifted">Gifted</option>
-      <option value="lost">Lost</option>
-      <option value="dead">Dead</option>
-    </select>
-
-    <div className="full-width">
-      <label htmlFor="plant-image" className="field-label">
-        Plant image
-      </label>
+  return (
+    <form className="plant-form-expanded" onSubmit={addPlant}>
       <input
-        id="plant-image"
-        type="file"
-        accept="image/*"
-        onChange={(e) => setPlantImage(e.target.files?.[0] ?? null)}
+        type="text"
+        placeholder="Nickname"
+        value={nickname}
+        onChange={(e) => setNickname(e.target.value)}
+        required
       />
-    </div>
 
-    <div className="full-width">
-      <textarea
-        placeholder="Notes"
-        value={notes}
-        onChange={(e) => setNotes(e.target.value)}
-        rows={5}
+      <input
+        type="text"
+        placeholder="Common name"
+        value={commonName}
+        onChange={(e) => setCommonName(e.target.value)}
       />
-    </div>
 
-    <div className="full-width">
-      <button type="submit">Add Plant</button>
-    </div>
-  </form>
-)
+      <input
+        type="text"
+        placeholder="Scientific name"
+        value={scientificName}
+        onChange={(e) => setScientificName(e.target.value)}
+      />
+
+      <input
+        type="text"
+        placeholder="Cultivar"
+        value={cultivar}
+        onChange={(e) => setCultivar(e.target.value)}
+      />
+
+      <input
+        type="text"
+        placeholder="Location"
+        value={location}
+        onChange={(e) => setLocation(e.target.value)}
+      />
+
+      <input
+        type="text"
+        placeholder="Light conditions"
+        value={lightConditions}
+        onChange={(e) => setLightConditions(e.target.value)}
+      />
+
+      <input
+        type="text"
+        placeholder="Pot size"
+        value={potSize}
+        onChange={(e) => setPotSize(e.target.value)}
+      />
+
+      <input
+        type="text"
+        placeholder="Substrate"
+        value={substrate}
+        onChange={(e) => setSubstrate(e.target.value)}
+      />
+
+      <input
+        type="date"
+        value={acquiredOn}
+        onChange={(e) => setAcquiredOn(e.target.value)}
+      />
+
+      <select value={status} onChange={(e) => setStatus(e.target.value)}>
+        <option value="active">Active</option>
+        <option value="gifted">Gifted</option>
+        <option value="lost">Lost</option>
+        <option value="dead">Dead</option>
+      </select>
+
+      <div className="full-width">
+        <label htmlFor="plant-image" className="field-label">
+          Plant image
+        </label>
+        <input
+          id="plant-image"
+          type="file"
+          accept="image/*"
+          capture="environment"
+          onChange={(e) => setPlantImage(e.target.files?.[0] ?? null)}
+        />
+      </div>
+      {plantImage && (
+        <div className="full-width">
+          <img
+            src={URL.createObjectURL(plantImage)}
+            alt="Plant preview"
+            style={{ maxWidth: '200px', borderRadius: '8px', marginTop: '0.5rem' }}
+          />
+        </div>
+      )}
+      <div className="full-width">
+        <textarea
+          placeholder="Notes"
+          value={notes}
+          onChange={(e) => setNotes(e.target.value)}
+          rows={5}
+        />
+      </div>
+
+      <div className="full-width">
+        <button type="submit">Add Plant</button>
+      </div>
+    </form>
+  )
 }
