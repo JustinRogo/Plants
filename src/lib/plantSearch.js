@@ -9,6 +9,8 @@ export function sortPlants(plants, sortKey) {
     })
   } else if (sortKey === 'date_added') {
     sorted.sort((a, b) => new Date(b.created_at) - new Date(a.created_at))
+  } else if (sortKey === 'oldest') {
+    sorted.sort((a, b) => new Date(a.created_at) - new Date(b.created_at))
   } else {
     sorted.sort((a, b) => (a.nickname || '').localeCompare(b.nickname || ''))
   }
