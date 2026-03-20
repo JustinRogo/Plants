@@ -25,6 +25,30 @@ function getSuggestions(list, query, field) {
   return results
 }
 
+async function resizeImageToBase64(file, maxSize = 800) {
+  return new Promise((resolve) => {
+    const img = new Image()
+    const url = URL.createObjectURL(file)
+    img.onload = () => {
+      URL.revokeObjectURL(url)
+      const canvas = document.createElement('canvas')
+      let { width, height } = img
+      if (width > height && width > maxSize) {
+        height = Math.round((height * maxSize) / width)
+        width = maxSize
+      } else if (height >= width && height > maxSize) {
+        width = Math.round((width * maxSize) / height)
+        height = maxSize
+      }
+      canvas.width = width
+      canvas.height = height
+      canvas.getContext('2d').drawImage(img, 0, 0, width, height)
+      resolve(canvas.toDataURL('image/jpeg', 0.85))
+    }
+    img.src = url
+  })
+}
+
 export default function PlantForm({ session, onPlantAdded, setMessage, setMessageType }) {
   const [nickname, setNickname] = useState('')
   const [commonName, setCommonName] = useState('')
@@ -44,6 +68,10 @@ export default function PlantForm({ session, onPlantAdded, setMessage, setMessag
   const [sciSuggestions, setSciSuggestions] = useState([])
   const [showCommon, setShowCommon] = useState(false)
   const [showSci, setShowSci] = useState(false)
+
+  const [identifying, setIdentifying] = useState(false)
+  const [idResults, setIdResults] = useState([])
+  const [idError, setIdError] = useState('')
 
   async function ensureListLoaded() {
     if (plantList) return plantList
@@ -75,6 +103,40 @@ export default function PlantForm({ session, onPlantAdded, setMessage, setMessag
     setSciSuggestions([])
     setShowCommon(false)
     setShowSci(false)
+  }
+
+  async function identifyPlant() {
+    if (!plantImage) return
+    setIdentifying(true)
+    setIdResults([])
+    setIdError('')
+
+    try {
+      const imageBase64 = await resizeImageToBase64(plantImage)
+      const { data, error } = await supabase.functions.invoke('identify-plant', {
+        body: { imageBase64 },
+      })
+
+      if (error) {
+        setIdError(error.message || 'Identification failed.')
+      } else if (data?.error) {
+        setIdError(data.error)
+      } else {
+        setIdResults(data?.results || [])
+        if (!data?.results?.length) setIdError('No matches found.')
+      }
+    } catch (err) {
+      setIdError('Identification failed.')
+    }
+
+    setIdentifying(false)
+  }
+
+  function applyIdResult(result) {
+    const common = result.commonNames[0] || ''
+    setCommonName(common)
+    setScientificName(result.scientificName)
+    setIdResults([])
   }
 
   async function addPlant(e) {
@@ -170,6 +232,8 @@ export default function PlantForm({ session, onPlantAdded, setMessage, setMessag
     setStatus('active')
     setNotes('')
     setPlantImage(null)
+    setIdResults([])
+    setIdError('')
 
     const fileInput = document.getElementById('plant-image')
     if (fileInput) fileInput.value = ''
@@ -291,9 +355,14 @@ export default function PlantForm({ session, onPlantAdded, setMessage, setMessag
           type="file"
           accept="image/*"
           capture="environment"
-          onChange={(e) => setPlantImage(e.target.files?.[0] ?? null)}
+          onChange={(e) => {
+            setPlantImage(e.target.files?.[0] ?? null)
+            setIdResults([])
+            setIdError('')
+          }}
         />
       </div>
+
       {plantImage && (
         <div className="full-width">
           <img
@@ -301,8 +370,47 @@ export default function PlantForm({ session, onPlantAdded, setMessage, setMessag
             alt="Plant preview"
             style={{ maxWidth: '200px', borderRadius: '8px', marginTop: '0.5rem' }}
           />
+          <div style={{ marginTop: '10px' }}>
+            <button
+              type="button"
+              className="secondary-button"
+              onClick={identifyPlant}
+              disabled={identifying}
+            >
+              {identifying ? 'Identifying...' : 'Identify Plant'}
+            </button>
+          </div>
+
+          {idError && (
+            <p className="muted" style={{ marginTop: '8px' }}>{idError}</p>
+          )}
+
+          {idResults.length > 0 && (
+            <div className="id-results">
+              <p className="field-label" style={{ marginBottom: '8px' }}>
+                Tap a result to fill in the name fields:
+              </p>
+              {idResults.map((result, i) => (
+                <button
+                  key={i}
+                  type="button"
+                  className="id-result-card"
+                  onClick={() => applyIdResult(result)}
+                >
+                  <span className="id-result-common">
+                    {result.commonNames[0] || result.scientificName}
+                  </span>
+                  <span className="id-result-sci">{result.scientificName}</span>
+                  <span className="id-result-score">
+                    {Math.round(result.score * 100)}% match
+                  </span>
+                </button>
+              ))}
+            </div>
+          )}
         </div>
       )}
+
       <div className="full-width">
         <textarea
           placeholder="Notes"
