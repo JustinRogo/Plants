@@ -400,3 +400,42 @@ button {
   border-radius: 12px;
   background: #222722;
 }
+
+.plant-card--selected {
+  border-color: #7ea16b;
+  background: #232c23;
+  outline: 2px solid #7ea16b;
+  outline-offset: -2px;
+}
+
+.plant-card-batch-row {
+  display: flex;
+  justify-content: flex-end;
+  margin-bottom: 8px;
+}
+
+.plant-card-checkbox {
+  width: 20px;
+  height: 20px;
+  cursor: pointer;
+  accent-color: #7ea16b;
+}
+
+.batch-care-panel {
+  margin-top: 0;
+  margin-bottom: 16px;
+}
+
+.batch-care-controls {
+  display: flex;
+  gap: 12px;
+  flex-wrap: wrap;
+  align-items: center;
+}
+
+.batch-care-controls select,
+.batch-care-controls input {
+  width: auto;
+  flex: 1;
+  min-width: 140px;
+}
