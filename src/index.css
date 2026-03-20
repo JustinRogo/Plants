@@ -107,6 +107,22 @@ button {
   color: #d9e8cf;
 }
 
+.message--success {
+  color: #7ea16b;
+  background: #1e2b1e;
+  border: 1px solid #3a5c30;
+  padding: 10px 14px;
+  border-radius: 10px;
+}
+
+.message--error {
+  color: #e08080;
+  background: #2b1e1e;
+  border: 1px solid #6c3a3a;
+  padding: 10px 14px;
+  border-radius: 10px;
+}
+
 .plant-grid {
   display: grid;
   grid-template-columns: repeat(auto-fill, minmax(220px, 1fr));

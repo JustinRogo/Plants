@@ -3,7 +3,7 @@ import { Link, useNavigate } from 'react-router-dom'
 import { supabase } from '../lib/supabase'
 import PlantForm from '../components/PlantForm'
 import SiteNav from '../components/SiteNav'
-import { filterPlants } from '../lib/plantSearch'
+import { filterPlants, sortPlants } from '../lib/plantSearch'
 
 export default function HomePage() {
   const navigate = useNavigate()
@@ -13,10 +13,12 @@ export default function HomePage() {
   const [plants, setPlants] = useState([])
   const [loading, setLoading] = useState(true)
   const [message, setMessage] = useState('')
+  const [messageType, setMessageType] = useState('success')
   const [showAddPlantForm, setShowAddPlantForm] = useState(false)
   const [searchTerm, setSearchTerm] = useState('')
+  const [sortKey, setSortKey] = useState('name')
 
-  const filteredPlants = filterPlants(plants, searchTerm)
+  const filteredPlants = sortPlants(filterPlants(plants, searchTerm), sortKey)
 
   useEffect(() => {
     let mounted = true
@@ -61,11 +63,6 @@ export default function HomePage() {
     loadPlants(session.user.id)
   }, [authReady, session, navigate])
 
-  async function signOut() {
-    await supabase.auth.signOut()
-    navigate('/explore', { replace: true })
-  }
-
   async function loadPlants(userId) {
     setLoading(true)
     setMessage('')
@@ -79,6 +76,7 @@ export default function HomePage() {
     if (error) {
       setPlants([])
       setMessage(error.message)
+      setMessageType('error')
     } else {
       setPlants(data ?? [])
     }
@@ -112,7 +110,6 @@ export default function HomePage() {
       <header className="page-header">
         <h1>My Plants</h1>
         <p>Catalog, care log, notes, and updates</p>
-        <button onClick={signOut}>Sign Out</button>
       </header>
 
       <section className="panel">
@@ -142,12 +139,13 @@ export default function HomePage() {
                 setShowAddPlantForm(false)
               }}
               setMessage={setMessage}
+              setMessageType={setMessageType}
             />
           </div>
         )}
       </section>
 
-      {message && <p className="message">{message}</p>}
+      {message && <p className={`message message--${messageType}`}>{message}</p>}
 
       <section className="panel">
         <div className="section-row">
@@ -157,12 +155,24 @@ export default function HomePage() {
           </div>
         </div>
 
-        <input
-          type="text"
-          placeholder="Search plants..."
-          value={searchTerm}
-          onChange={(e) => setSearchTerm(e.target.value)}
-        />
+        <div style={{ display: 'flex', gap: '12px' }}>
+          <input
+            type="text"
+            placeholder="Search plants..."
+            value={searchTerm}
+            onChange={(e) => setSearchTerm(e.target.value)}
+            style={{ flex: 1 }}
+          />
+          <select
+            value={sortKey}
+            onChange={(e) => setSortKey(e.target.value)}
+            style={{ width: 'auto' }}
+          >
+            <option value="name">Name</option>
+            <option value="last_watered">Last watered</option>
+            <option value="date_added">Date added</option>
+          </select>
+        </div>
       </section>
 
       <section>

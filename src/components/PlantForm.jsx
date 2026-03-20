@@ -1,7 +1,7 @@
 import { useState } from 'react'
 import { supabase } from '../lib/supabase'
 
-export default function PlantForm({ session, onPlantAdded, setMessage }) {
+export default function PlantForm({ session, onPlantAdded, setMessage, setMessageType }) {
   const [nickname, setNickname] = useState('')
   const [commonName, setCommonName] = useState('')
   const [scientificName, setScientificName] = useState('')
@@ -21,6 +21,7 @@ export default function PlantForm({ session, onPlantAdded, setMessage }) {
 
     if (!session?.user) {
       setMessage('You need to sign in first.')
+      setMessageType?.('error')
       return
     }
 
@@ -47,6 +48,7 @@ export default function PlantForm({ session, onPlantAdded, setMessage }) {
 
     if (insertError) {
       setMessage(insertError.message)
+      setMessageType?.('error')
       return
     }
 
@@ -60,6 +62,7 @@ export default function PlantForm({ session, onPlantAdded, setMessage }) {
 
       if (uploadError) {
         setMessage(`Plant saved, but image upload failed: ${uploadError.message}`)
+        setMessageType?.('error')
         onPlantAdded()
         return
       }
@@ -75,6 +78,7 @@ export default function PlantForm({ session, onPlantAdded, setMessage }) {
 
       if (photoInsertError) {
         setMessage(`Plant saved, image uploaded, but photo record failed: ${photoInsertError.message}`)
+        setMessageType?.('error')
         onPlantAdded()
         return
       }
@@ -86,6 +90,7 @@ export default function PlantForm({ session, onPlantAdded, setMessage }) {
 
       if (plantUpdateError) {
         setMessage(`Plant saved, but featured image could not be linked: ${plantUpdateError.message}`)
+        setMessageType?.('error')
         onPlantAdded()
         return
       }
@@ -108,6 +113,7 @@ export default function PlantForm({ session, onPlantAdded, setMessage }) {
     if (fileInput) fileInput.value = ''
 
     setMessage('Plant added.')
+    setMessageType?.('success')
     onPlantAdded()
   }
 
@@ -170,11 +176,14 @@ export default function PlantForm({ session, onPlantAdded, setMessage }) {
         onChange={(e) => setSubstrate(e.target.value)}
       />
 
-      <input
-        type="date"
-        value={acquiredOn}
-        onChange={(e) => setAcquiredOn(e.target.value)}
-      />
+      <div>
+        <label className="field-label">Date acquired</label>
+        <input
+          type="date"
+          value={acquiredOn}
+          onChange={(e) => setAcquiredOn(e.target.value)}
+        />
+      </div>
 
       <select value={status} onChange={(e) => setStatus(e.target.value)}>
         <option value="active">Active</option>
