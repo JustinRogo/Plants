@@ -12,6 +12,7 @@ export default function PlantDetailPage() {
   const [updates, setUpdates] = useState([])
   const [loading, setLoading] = useState(true)
   const [message, setMessage] = useState('')
+  const [messageType, setMessageType] = useState('success')
 
   const [isEditingPlant, setIsEditingPlant] = useState(false)
   const [savingPlant, setSavingPlant] = useState(false)
@@ -41,7 +42,9 @@ export default function PlantDetailPage() {
   const [submitting, setSubmitting] = useState(false)
   const [updatingFeaturedId, setUpdatingFeaturedId] = useState(null)
   const [deletingPhotoId, setDeletingPhotoId] = useState(null)
+  const [pendingDeletePhotoId, setPendingDeletePhotoId] = useState(null)
   const [deletingUpdateId, setDeletingUpdateId] = useState(null)
+  const [pendingDeleteUpdateId, setPendingDeleteUpdateId] = useState(null)
   const [deletingPlant, setDeletingPlant] = useState(false)
   const [session, setSession] = useState(null)
   const isOwner = session?.user?.id === plant?.user_id
@@ -70,6 +73,7 @@ export default function PlantDetailPage() {
 
     if (plantError) {
       setMessage(plantError.message)
+      setMessageType('error')
       setLoading(false)
       return
     }
@@ -82,6 +86,7 @@ export default function PlantDetailPage() {
 
     if (photoError) {
       setMessage(photoError.message)
+      setMessageType('error')
       setLoading(false)
       return
     }
@@ -94,6 +99,7 @@ export default function PlantDetailPage() {
 
     if (updateError) {
       setMessage(updateError.message)
+      setMessageType('error')
       setLoading(false)
       return
     }
@@ -156,6 +162,7 @@ export default function PlantDetailPage() {
 
     if (error) {
       setMessage(error.message)
+      setMessageType('error')
       setSavingPlant(false)
       return
     }
@@ -164,6 +171,7 @@ export default function PlantDetailPage() {
     setIsEditingPlant(false)
     setSavingPlant(false)
     setMessage('Plant details updated.')
+    setMessageType('success')
   }
 
   async function addUpdate(e) {
@@ -178,6 +186,7 @@ export default function PlantDetailPage() {
 
     if (userError || !user) {
       setMessage(userError?.message || 'You must be signed in.')
+      setMessageType('error')
       setSubmitting(false)
       return
     }
@@ -198,6 +207,7 @@ export default function PlantDetailPage() {
 
     if (updateError) {
       setMessage(updateError.message)
+      setMessageType('error')
       setSubmitting(false)
       return
     }
@@ -212,6 +222,7 @@ export default function PlantDetailPage() {
 
       if (uploadError) {
         setMessage(`Update saved, but image upload failed: ${uploadError.message}`)
+        setMessageType('error')
         setSubmitting(false)
         await loadPlantDetail()
         return
@@ -230,6 +241,7 @@ export default function PlantDetailPage() {
 
       if (photoInsertError) {
         setMessage(`Update saved, image uploaded, but photo record failed: ${photoInsertError.message}`)
+        setMessageType('error')
         setSubmitting(false)
         await loadPlantDetail()
         return
@@ -238,6 +250,7 @@ export default function PlantDetailPage() {
 
     resetUpdateForm()
     setMessage('Update added.')
+    setMessageType('success')
     setSubmitting(false)
     await loadPlantDetail()
   }
@@ -255,6 +268,7 @@ export default function PlantDetailPage() {
 
     if (clearError) {
       setMessage(clearError.message)
+      setMessageType('error')
       setUpdatingFeaturedId(null)
       return
     }
@@ -266,6 +280,7 @@ export default function PlantDetailPage() {
 
     if (markError) {
       setMessage(markError.message)
+      setMessageType('error')
       setUpdatingFeaturedId(null)
       return
     }
@@ -277,22 +292,19 @@ export default function PlantDetailPage() {
 
     if (plantError) {
       setMessage(plantError.message)
+      setMessageType('error')
       setUpdatingFeaturedId(null)
       return
     }
 
     setUpdatingFeaturedId(null)
     setMessage('Featured photo updated.')
+    setMessageType('success')
     await loadPlantDetail()
   }
 
-  async function deletePhoto(photo) {
+  async function confirmDeletePhoto(photo) {
     if (!photo?.id) return
-
-    const confirmed = window.confirm(
-      'Delete this photo? This will remove it from storage and from the plant gallery.'
-    )
-    if (!confirmed) return
 
     setMessage('')
     setDeletingPhotoId(photo.id)
@@ -306,7 +318,9 @@ export default function PlantDetailPage() {
 
       if (storageError) {
         setMessage(storageError.message)
+        setMessageType('error')
         setDeletingPhotoId(null)
+        setPendingDeletePhotoId(null)
         return
       }
     }
@@ -318,7 +332,9 @@ export default function PlantDetailPage() {
 
     if (rowError) {
       setMessage(rowError.message)
+      setMessageType('error')
       setDeletingPhotoId(null)
+      setPendingDeletePhotoId(null)
       return
     }
 
@@ -350,17 +366,14 @@ export default function PlantDetailPage() {
     }
 
     setDeletingPhotoId(null)
+    setPendingDeletePhotoId(null)
     setMessage('Photo deleted.')
+    setMessageType('success')
     await loadPlantDetail()
   }
 
-  async function deleteUpdate(update) {
+  async function confirmDeleteUpdate(update) {
     if (!update?.id) return
-
-    const confirmed = window.confirm(
-      'Delete this update? This cannot be undone.'
-    )
-    if (!confirmed) return
 
     setMessage('')
     setDeletingUpdateId(update.id)
@@ -372,12 +385,16 @@ export default function PlantDetailPage() {
 
     if (error) {
       setMessage(error.message)
+      setMessageType('error')
       setDeletingUpdateId(null)
+      setPendingDeleteUpdateId(null)
       return
     }
 
     setDeletingUpdateId(null)
+    setPendingDeleteUpdateId(null)
     setMessage('Update deleted.')
+    setMessageType('success')
     await loadPlantDetail()
   }
 
@@ -398,6 +415,7 @@ export default function PlantDetailPage() {
         .remove(storagePaths)
       if (storageError) {
         setMessage(storageError.message)
+        setMessageType('error')
         setDeletingPlant(false)
         return
       }
@@ -409,6 +427,7 @@ export default function PlantDetailPage() {
       .eq('plant_id', plantId)
     if (photosError) {
       setMessage(photosError.message)
+      setMessageType('error')
       setDeletingPlant(false)
       return
     }
@@ -419,6 +438,7 @@ export default function PlantDetailPage() {
       .eq('plant_id', plantId)
     if (updatesError) {
       setMessage(updatesError.message)
+      setMessageType('error')
       setDeletingPlant(false)
       return
     }
@@ -429,6 +449,7 @@ export default function PlantDetailPage() {
       .eq('id', plantId)
     if (plantError) {
       setMessage(plantError.message)
+      setMessageType('error')
       setDeletingPlant(false)
       return
     }
@@ -465,7 +486,7 @@ export default function PlantDetailPage() {
       <div className="app-shell">
         <Link to="/" className="back-link">← Back to all plants</Link>
         <p>Plant not found.</p>
-        {message && <p className="message">{message}</p>}
+        {message && <p className={`message message--${messageType}`}>{message}</p>}
       </div>
     )
   }
@@ -599,11 +620,14 @@ export default function PlantDetailPage() {
                 value={editSubstrate}
                 onChange={(e) => setEditSubstrate(e.target.value)}
               />
-              <input
-                type="date"
-                value={editAcquiredOn}
-                onChange={(e) => setEditAcquiredOn(e.target.value)}
-              />
+              <div>
+                <label className="field-label">Date acquired</label>
+                <input
+                  type="date"
+                  value={editAcquiredOn}
+                  onChange={(e) => setEditAcquiredOn(e.target.value)}
+                />
+              </div>
               <select
                 value={editStatus}
                 onChange={(e) => setEditStatus(e.target.value)}
@@ -697,7 +721,7 @@ export default function PlantDetailPage() {
           </form>
         </section>
       )}
-      {message && <p className="message">{message}</p>}
+      {message && <p className={`message message--${messageType}`}>{message}</p>}
 
       <section className="panel">
         <h2>Photo History</h2>
@@ -739,14 +763,35 @@ export default function PlantDetailPage() {
                     )}
 
                     {isOwner && (
-                      <button
-                        type="button"
-                        className="danger-button"
-                        onClick={() => deletePhoto(photo)}
-                        disabled={deletingPhotoId === photo.id || updatingFeaturedId === photo.id}
-                      >
-                        {deletingPhotoId === photo.id ? 'Deleting...' : 'Delete photo'}
-                      </button>
+                      pendingDeletePhotoId === photo.id ? (
+                        <>
+                          <button
+                            type="button"
+                            className="danger-button"
+                            onClick={() => confirmDeletePhoto(photo)}
+                            disabled={deletingPhotoId === photo.id}
+                          >
+                            {deletingPhotoId === photo.id ? 'Deleting...' : 'Confirm'}
+                          </button>
+                          <button
+                            type="button"
+                            className="secondary-button"
+                            onClick={() => setPendingDeletePhotoId(null)}
+                            disabled={deletingPhotoId === photo.id}
+                          >
+                            Cancel
+                          </button>
+                        </>
+                      ) : (
+                        <button
+                          type="button"
+                          className="danger-button"
+                          onClick={() => setPendingDeletePhotoId(photo.id)}
+                          disabled={deletingPhotoId === photo.id || updatingFeaturedId === photo.id}
+                        >
+                          Delete photo
+                        </button>
+                      )
                     )}
                   </div>
                 </div>
@@ -776,14 +821,35 @@ export default function PlantDetailPage() {
 
                 {isOwner && (
                   <div className="timeline-actions">
-                    <button
-                      type="button"
-                      className="danger-button"
-                      onClick={() => deleteUpdate(update)}
-                      disabled={deletingUpdateId === update.id}
-                    >
-                      {deletingUpdateId === update.id ? 'Deleting...' : 'Delete update'}
-                    </button>
+                    {pendingDeleteUpdateId === update.id ? (
+                      <div style={{ display: 'flex', gap: '8px' }}>
+                        <button
+                          type="button"
+                          className="danger-button"
+                          onClick={() => confirmDeleteUpdate(update)}
+                          disabled={deletingUpdateId === update.id}
+                        >
+                          {deletingUpdateId === update.id ? 'Deleting...' : 'Confirm'}
+                        </button>
+                        <button
+                          type="button"
+                          className="secondary-button"
+                          onClick={() => setPendingDeleteUpdateId(null)}
+                          disabled={deletingUpdateId === update.id}
+                        >
+                          Cancel
+                        </button>
+                      </div>
+                    ) : (
+                      <button
+                        type="button"
+                        className="danger-button"
+                        onClick={() => setPendingDeleteUpdateId(update.id)}
+                        disabled={deletingUpdateId === update.id}
+                      >
+                        Delete update
+                      </button>
+                    )}
                   </div>
                 )}
               </article>

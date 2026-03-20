@@ -107,6 +107,22 @@ button {
   color: #d9e8cf;
 }
 
+.message--success {
+  color: #7ea16b;
+  background: #1e2b1e;
+  border: 1px solid #3a5c30;
+  padding: 10px 14px;
+  border-radius: 10px;
+}
+
+.message--error {
+  color: #e08080;
+  background: #2b1e1e;
+  border: 1px solid #6c3a3a;
+  padding: 10px 14px;
+  border-radius: 10px;
+}
+
 .plant-grid {
   display: grid;
   grid-template-columns: repeat(auto-fill, minmax(220px, 1fr));
@@ -383,4 +399,91 @@ button {
   border: 1px solid #3b433c;
   border-radius: 12px;
   background: #222722;
+}
+
+.plant-card--selected {
+  border-color: #7ea16b;
+  background: #232c23;
+  outline: 2px solid #7ea16b;
+  outline-offset: -2px;
+}
+
+.plant-card-batch-row {
+  display: flex;
+  justify-content: flex-end;
+  margin-bottom: 8px;
+}
+
+.plant-card-checkbox {
+  width: 20px;
+  height: 20px;
+  cursor: pointer;
+  accent-color: #7ea16b;
+}
+
+.batch-care-panel {
+  margin-top: 0;
+  margin-bottom: 16px;
+}
+
+.batch-care-controls {
+  display: flex;
+  gap: 12px;
+  flex-wrap: wrap;
+  align-items: center;
+}
+
+.batch-care-controls select,
+.batch-care-controls input {
+  width: auto;
+  flex: 1;
+  min-width: 140px;
+}
+
+.autocomplete-wrap {
+  position: relative;
+}
+
+.autocomplete-wrap input {
+  width: 100%;
+}
+
+.suggestions-list {
+  position: absolute;
+  top: 100%;
+  left: 0;
+  right: 0;
+  z-index: 100;
+  margin: 4px 0 0;
+  padding: 0;
+  list-style: none;
+  background: #1e231e;
+  border: 1px solid #4c584d;
+  border-radius: 10px;
+  overflow: hidden;
+  box-shadow: 0 6px 20px rgba(0, 0, 0, 0.4);
+}
+
+.suggestions-list li {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  padding: 10px 14px;
+  cursor: pointer;
+  border-bottom: 1px solid #2e372e;
+}
+
+.suggestions-list li:last-child {
+  border-bottom: none;
+}
+
+.suggestions-list li:hover,
+.suggestions-list li:focus {
+  background: #2a352a;
+}
+
+.suggestions-sci {
+  color: #b9c4b3;
+  font-style: italic;
+  font-size: 0.9rem;
 }

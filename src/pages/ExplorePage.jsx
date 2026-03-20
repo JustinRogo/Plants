@@ -2,15 +2,25 @@ import { useEffect, useState } from 'react'
 import { Link } from 'react-router-dom'
 import { supabase } from '../lib/supabase'
 import SiteNav from '../components/SiteNav'
-import { filterPlants } from '../lib/plantSearch'
+import { filterPlants, sortPlants } from '../lib/plantSearch'
 
 export default function ExplorePage() {
   const [plants, setPlants] = useState([])
   const [loading, setLoading] = useState(true)
   const [message, setMessage] = useState('')
   const [searchTerm, setSearchTerm] = useState('')
+  const [sortKey, setSortKey] = useState('date_added')
+  const [ownerFilter, setOwnerFilter] = useState('')
 
-  const filteredPlants = filterPlants(plants, searchTerm)
+  const owners = deriveOwners(plants)
+
+  const visiblePlants = sortPlants(
+    filterPlants(
+      ownerFilter ? plants.filter((p) => p.owner?.id === ownerFilter) : plants,
+      searchTerm
+    ),
+    sortKey
+  )
 
   useEffect(() => {
     loadPublicPlants()
@@ -72,19 +82,41 @@ export default function ExplorePage() {
       <section className="panel search-panel">
         <div className="section-row">
           <div>
-            <h2 className="section-title">Search Public Plants</h2>
+            <h2 className="section-title">Search &amp; Filter</h2>
             <p className="muted">
               Search shared collections by plant name, species, location, or notes.
             </p>
           </div>
         </div>
 
-        <input
-          type="text"
-          placeholder="Search public plants..."
-          value={searchTerm}
-          onChange={(e) => setSearchTerm(e.target.value)}
-        />
+        <div style={{ display: 'flex', gap: '12px', flexWrap: 'wrap' }}>
+          <input
+            type="text"
+            placeholder="Search public plants..."
+            value={searchTerm}
+            onChange={(e) => setSearchTerm(e.target.value)}
+            style={{ flex: '2 1 180px' }}
+          />
+          <select
+            value={ownerFilter}
+            onChange={(e) => setOwnerFilter(e.target.value)}
+            style={{ flex: '1 1 140px', width: 'auto' }}
+          >
+            <option value="">All owners</option>
+            {owners.map((o) => (
+              <option key={o.id} value={o.id}>{o.name}</option>
+            ))}
+          </select>
+          <select
+            value={sortKey}
+            onChange={(e) => setSortKey(e.target.value)}
+            style={{ flex: '1 1 120px', width: 'auto' }}
+          >
+            <option value="date_added">Newest</option>
+            <option value="oldest">Oldest</option>
+            <option value="name">Name A–Z</option>
+          </select>
+        </div>
       </section>
 
       {message && <p className="message">{message}</p>}
@@ -93,11 +125,11 @@ export default function ExplorePage() {
         <p>Loading public plants...</p>
       ) : plants.length === 0 ? (
         <p>No public plants yet.</p>
-      ) : filteredPlants.length === 0 ? (
-        <p>No public plants match your search.</p>
+      ) : visiblePlants.length === 0 ? (
+        <p>No public plants match your filters.</p>
       ) : (
         <div className="plant-grid">
-          {filteredPlants.map((plant) => {
+          {visiblePlants.map((plant) => {
             const imageUrl = getPlantImageUrl(plant.featured_photo_path)
             const ownerName = getOwnerName(plant)
 
@@ -139,4 +171,19 @@ export default function ExplorePage() {
       )}
     </div>
   )
+}
+
+function deriveOwners(plants) {
+  const seen = new Set()
+  return plants
+    .map((p) => ({
+      id: p.owner?.id,
+      name: p.owner?.public_display_name || p.owner?.display_name || 'Unknown',
+    }))
+    .filter((o) => {
+      if (!o.id || seen.has(o.id)) return false
+      seen.add(o.id)
+      return true
+    })
+    .sort((a, b) => a.name.localeCompare(b.name))
 }
