@@ -118,16 +118,11 @@ export default function PlantForm({ session, onPlantAdded, setMessage, setMessag
       })
 
       if (error) {
-        // Try to extract the real message from the function's response body
-        let msg = 'Identification failed.'
+        let msg = error.message || 'Identification failed.'
         try {
-          const body = await error.context?.json?.()
+          const body = await error.context.json()
           if (body?.error) msg = body.error
-        } catch (_) {
-          if (error.message && error.message !== 'Edge Function returned a non-2xx status code') {
-            msg = error.message
-          }
-        }
+        } catch (_) {}
         setIdError(msg)
       } else if (data?.error) {
         setIdError(data.error)
