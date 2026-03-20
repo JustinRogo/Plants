@@ -118,7 +118,17 @@ export default function PlantForm({ session, onPlantAdded, setMessage, setMessag
       })
 
       if (error) {
-        setIdError(error.message || 'Identification failed.')
+        // Try to extract the real message from the function's response body
+        let msg = 'Identification failed.'
+        try {
+          const body = await error.context?.json?.()
+          if (body?.error) msg = body.error
+        } catch (_) {
+          if (error.message && error.message !== 'Edge Function returned a non-2xx status code') {
+            msg = error.message
+          }
+        }
+        setIdError(msg)
       } else if (data?.error) {
         setIdError(data.error)
       } else {
@@ -126,7 +136,7 @@ export default function PlantForm({ session, onPlantAdded, setMessage, setMessag
         if (!data?.results?.length) setIdError('No matches found.')
       }
     } catch (err) {
-      setIdError('Identification failed.')
+      setIdError(String(err))
     }
 
     setIdentifying(false)

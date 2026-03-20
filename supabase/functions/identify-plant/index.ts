@@ -29,15 +29,16 @@ serve(async (req) => {
     for (let i = 0; i < binaryStr.length; i++) {
       bytes[i] = binaryStr.charCodeAt(i)
     }
-    const blob = new Blob([bytes], { type: mimeType })
+    const file = new File([bytes], 'plant.jpg', { type: mimeType })
 
     const form = new FormData()
-    form.append('images', blob, 'plant.jpg')
+    form.append('images', file)
     form.append('organs', 'auto')
 
     const apiKey = Deno.env.get('PLANTNET_API_KEY')
     if (!apiKey) {
-      return new Response(JSON.stringify({ error: 'PLANTNET_API_KEY not configured' }), {
+      console.error('PLANTNET_API_KEY secret is not set')
+      return new Response(JSON.stringify({ error: 'PLANTNET_API_KEY not configured — set it with: supabase secrets set PLANTNET_API_KEY=your_key' }), {
         status: 500,
         headers: { ...corsHeaders, 'Content-Type': 'application/json' },
       })
@@ -49,9 +50,10 @@ serve(async (req) => {
     )
 
     const data = await response.json()
+    console.log('PlantNet status:', response.status, JSON.stringify(data).slice(0, 200))
 
     if (!response.ok) {
-      return new Response(JSON.stringify({ error: data?.message || 'PlantNet error' }), {
+      return new Response(JSON.stringify({ error: data?.message || `PlantNet returned ${response.status}` }), {
         status: response.status,
         headers: { ...corsHeaders, 'Content-Type': 'application/json' },
       })
