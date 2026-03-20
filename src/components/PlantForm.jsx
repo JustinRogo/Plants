@@ -118,7 +118,12 @@ export default function PlantForm({ session, onPlantAdded, setMessage, setMessag
       })
 
       if (error) {
-        setIdError(error.message || 'Identification failed.')
+        let msg = error.message || 'Identification failed.'
+        try {
+          const body = await error.context.json()
+          if (body?.error) msg = body.error
+        } catch (_) {}
+        setIdError(msg)
       } else if (data?.error) {
         setIdError(data.error)
       } else {
@@ -126,7 +131,7 @@ export default function PlantForm({ session, onPlantAdded, setMessage, setMessag
         if (!data?.results?.length) setIdError('No matches found.')
       }
     } catch (err) {
-      setIdError('Identification failed.')
+      setIdError(String(err))
     }
 
     setIdentifying(false)
