@@ -1,6 +1,30 @@
 import { useState } from 'react'
 import { supabase } from '../lib/supabase'
 
+// Module-level cache — loaded once, shared across all renders
+let plantListCache = null
+
+async function loadPlantList() {
+  if (plantListCache) return plantListCache
+  const res = await fetch(import.meta.env.BASE_URL + 'plantlist.json')
+  plantListCache = await res.json()
+  return plantListCache
+}
+
+function getSuggestions(list, query, field) {
+  if (!list || query.length < 2) return []
+  const q = query.toLowerCase()
+  const results = []
+  for (const entry of list) {
+    const target = field === 'common' ? entry[0] : entry[1]
+    if (target.toLowerCase().includes(q)) {
+      results.push(entry)
+      if (results.length === 8) break
+    }
+  }
+  return results
+}
+
 export default function PlantForm({ session, onPlantAdded, setMessage, setMessageType }) {
   const [nickname, setNickname] = useState('')
   const [commonName, setCommonName] = useState('')
@@ -14,6 +38,44 @@ export default function PlantForm({ session, onPlantAdded, setMessage, setMessag
   const [status, setStatus] = useState('active')
   const [notes, setNotes] = useState('')
   const [plantImage, setPlantImage] = useState(null)
+
+  const [plantList, setPlantList] = useState(null)
+  const [commonSuggestions, setCommonSuggestions] = useState([])
+  const [sciSuggestions, setSciSuggestions] = useState([])
+  const [showCommon, setShowCommon] = useState(false)
+  const [showSci, setShowSci] = useState(false)
+
+  async function ensureListLoaded() {
+    if (plantList) return plantList
+    const list = await loadPlantList()
+    setPlantList(list)
+    return list
+  }
+
+  async function handleCommonNameChange(e) {
+    const val = e.target.value
+    setCommonName(val)
+    const list = await ensureListLoaded()
+    setCommonSuggestions(getSuggestions(list, val, 'common'))
+    setShowCommon(true)
+  }
+
+  async function handleSciNameChange(e) {
+    const val = e.target.value
+    setScientificName(val)
+    const list = await ensureListLoaded()
+    setSciSuggestions(getSuggestions(list, val, 'sci'))
+    setShowSci(true)
+  }
+
+  function selectSuggestion(entry) {
+    setCommonName(entry[0])
+    setScientificName(entry[1])
+    setCommonSuggestions([])
+    setSciSuggestions([])
+    setShowCommon(false)
+    setShowSci(false)
+  }
 
   async function addPlant(e) {
     e.preventDefault()
@@ -127,19 +189,47 @@ export default function PlantForm({ session, onPlantAdded, setMessage, setMessag
         required
       />
 
-      <input
-        type="text"
-        placeholder="Common name"
-        value={commonName}
-        onChange={(e) => setCommonName(e.target.value)}
-      />
+      <div className="autocomplete-wrap">
+        <input
+          type="text"
+          placeholder="Common name"
+          value={commonName}
+          onChange={handleCommonNameChange}
+          onFocus={() => { ensureListLoaded(); setShowCommon(true) }}
+          onBlur={() => setTimeout(() => setShowCommon(false), 150)}
+        />
+        {showCommon && commonSuggestions.length > 0 && (
+          <ul className="suggestions-list">
+            {commonSuggestions.map((entry, i) => (
+              <li key={i} onMouseDown={() => selectSuggestion(entry)}>
+                <span>{entry[0]}</span>
+                <span className="suggestions-sci">{entry[1]}</span>
+              </li>
+            ))}
+          </ul>
+        )}
+      </div>
 
-      <input
-        type="text"
-        placeholder="Scientific name"
-        value={scientificName}
-        onChange={(e) => setScientificName(e.target.value)}
-      />
+      <div className="autocomplete-wrap">
+        <input
+          type="text"
+          placeholder="Scientific name"
+          value={scientificName}
+          onChange={handleSciNameChange}
+          onFocus={() => { ensureListLoaded(); setShowSci(true) }}
+          onBlur={() => setTimeout(() => setShowSci(false), 150)}
+        />
+        {showSci && sciSuggestions.length > 0 && (
+          <ul className="suggestions-list">
+            {sciSuggestions.map((entry, i) => (
+              <li key={i} onMouseDown={() => selectSuggestion(entry)}>
+                <span className="suggestions-sci">{entry[1]}</span>
+                <span>{entry[0]}</span>
+              </li>
+            ))}
+          </ul>
+        )}
+      </div>
 
       <input
         type="text"

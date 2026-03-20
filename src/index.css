@@ -439,3 +439,51 @@ button {
   flex: 1;
   min-width: 140px;
 }
+
+.autocomplete-wrap {
+  position: relative;
+}
+
+.autocomplete-wrap input {
+  width: 100%;
+}
+
+.suggestions-list {
+  position: absolute;
+  top: 100%;
+  left: 0;
+  right: 0;
+  z-index: 100;
+  margin: 4px 0 0;
+  padding: 0;
+  list-style: none;
+  background: #1e231e;
+  border: 1px solid #4c584d;
+  border-radius: 10px;
+  overflow: hidden;
+  box-shadow: 0 6px 20px rgba(0, 0, 0, 0.4);
+}
+
+.suggestions-list li {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  padding: 10px 14px;
+  cursor: pointer;
+  border-bottom: 1px solid #2e372e;
+}
+
+.suggestions-list li:last-child {
+  border-bottom: none;
+}
+
+.suggestions-list li:hover,
+.suggestions-list li:focus {
+  background: #2a352a;
+}
+
+.suggestions-sci {
+  color: #b9c4b3;
+  font-style: italic;
+  font-size: 0.9rem;
+}
