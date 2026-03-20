@@ -1,10 +1,11 @@
 import { useEffect, useState } from 'react'
-import { Link, useParams } from 'react-router-dom'
+import { Link, useParams, useNavigate } from 'react-router-dom'
 import { supabase } from '../lib/supabase'
 import SiteNav from '../components/SiteNav'
 
 export default function PlantDetailPage() {
   const { plantId } = useParams()
+  const navigate = useNavigate()
 
   const [plant, setPlant] = useState(null)
   const [photos, setPhotos] = useState([])
@@ -41,6 +42,7 @@ export default function PlantDetailPage() {
   const [updatingFeaturedId, setUpdatingFeaturedId] = useState(null)
   const [deletingPhotoId, setDeletingPhotoId] = useState(null)
   const [deletingUpdateId, setDeletingUpdateId] = useState(null)
+  const [deletingPlant, setDeletingPlant] = useState(false)
   const [session, setSession] = useState(null)
   const isOwner = session?.user?.id === plant?.user_id
 
@@ -379,6 +381,61 @@ export default function PlantDetailPage() {
     await loadPlantDetail()
   }
 
+  async function deletePlant() {
+    const confirmed = window.confirm(
+      'Delete this plant and all its photos and updates? This cannot be undone.'
+    )
+    if (!confirmed) return
+
+    setMessage('')
+    setDeletingPlant(true)
+
+    const storagePaths = photos.map((p) => p.storage_path).filter(Boolean)
+
+    if (storagePaths.length > 0) {
+      const { error: storageError } = await supabase.storage
+        .from('plant-photos')
+        .remove(storagePaths)
+      if (storageError) {
+        setMessage(storageError.message)
+        setDeletingPlant(false)
+        return
+      }
+    }
+
+    const { error: photosError } = await supabase
+      .from('plant_photos')
+      .delete()
+      .eq('plant_id', plantId)
+    if (photosError) {
+      setMessage(photosError.message)
+      setDeletingPlant(false)
+      return
+    }
+
+    const { error: updatesError } = await supabase
+      .from('plant_updates')
+      .delete()
+      .eq('plant_id', plantId)
+    if (updatesError) {
+      setMessage(updatesError.message)
+      setDeletingPlant(false)
+      return
+    }
+
+    const { error: plantError } = await supabase
+      .from('plants')
+      .delete()
+      .eq('id', plantId)
+    if (plantError) {
+      setMessage(plantError.message)
+      setDeletingPlant(false)
+      return
+    }
+
+    navigate('/')
+  }
+
   function resetUpdateForm() {
     setUpdateType('note')
     setUpdateTitle('')
@@ -438,13 +495,23 @@ export default function PlantDetailPage() {
           <div className="section-row">
             <h1>{plant.nickname}</h1>
             {isOwner && !isEditingPlant ? (
-              <button
-                type="button"
-                className="secondary-button"
-                onClick={() => setIsEditingPlant(true)}
-              >
-                Edit Plant
-              </button>
+              <div style={{ display: 'flex', gap: '0.5rem' }}>
+                <button
+                  type="button"
+                  className="secondary-button"
+                  onClick={() => setIsEditingPlant(true)}
+                >
+                  Edit Plant
+                </button>
+                <button
+                  type="button"
+                  className="danger-button"
+                  onClick={deletePlant}
+                  disabled={deletingPlant}
+                >
+                  {deletingPlant ? 'Deleting...' : 'Delete Plant'}
+                </button>
+              </div>
             ) : null}
           </div>
 
